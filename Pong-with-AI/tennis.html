@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tenis</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: darkgray;
+        }
+
+        canvas {
+            border: 3px solid #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+
+        <div>Wyniki</div>
+        <div id="player"></div>
+        <div id="ai"></div>
+        <canvas></canvas>
+    </div>
+
+    <script>
+        const canvas = document.querySelector('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = 1000;
+        canvas.height = 500;
+
+        const ch = canvas.height;
+        const cw = canvas.width;
+
+        const ballSize = 20;
+        let ballX = cw / 2 - ballSize / 2;
+        let ballY = ch / 2 - ballSize / 2;
+
+        const paddleHeight = 100;
+        const paddleWidth = 20;
+
+        /* distance from left and top edge for left paddle */
+        const playerX = 70;
+        let playerY = 200;
+        /* distance from left and top edge for right paddle */
+        const aiX = 910;
+        let aiY = 200;
+
+        let lineWidth = 6;
+        let lineHeight = 16;
+
+        let ballSpeedX = 7;
+        let ballSpeedY = 5;
+
+
+        function player() {
+            ctx.fillStyle = '#7FFF00';
+            ctx.fillRect(playerX, playerY, paddleWidth, paddleHeight)
+        }
+
+
+        function ai() {
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(aiX, aiY, paddleWidth, paddleHeight)
+        }
+
+        let playerScore = 0;
+        let aiScore = 0;
+        function ball() {
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(ballX, ballY, ballSize, ballSize);
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            /*edge colision*/
+            if (ballY <= 0 || ballY >= ch - ballSize) {
+                ballSpeedY = -ballSpeedY;
+                speedUp();
+            }
+
+            if (ballX <= 0) {
+                let doc = document.getElementById("ai");
+                aiScore += 1;
+                doc.innerHTML = aiScore;
+                ballSpeedX = 1;
+                ballSpeedY = 1;
+                ballY = ch / 2 - ballSize / 2;
+                ballX = cw / 2 - ballSize / 2;
+            } 
+            if (ballX >= cw - ballSize) {
+                let doc = document.getElementById("player");
+                playerScore += 1;
+                doc.innerHTML = playerScore;
+                ballSpeedX = 1;
+                ballSpeedY = 1;
+                ballY = ch / 2 - ballSize / 2;
+                ballX = cw / 2 - ballSize / 2;
+            }
+        }
+
+        let colissionHappening = false;
+        function colission() {
+
+            let paddleMid = playerY - paddleHeight / 2;
+            let ballOffset = paddleMid - ballY;
+            /* player colission */
+            if (((ballY + ballSize > playerY && ballY < playerY + paddleHeight)
+                && ballX < playerX + paddleWidth)
+                && !colissionHappening) {
+                ballSpeedX = -ballSpeedX;
+
+                let x = (ballOffset * Math.PI / 2) / (paddleHeight / 2);
+
+                ballSpeedY += 2 * Math.cos(x);
+
+                colissionHappening = true;
+                return;
+            }
+
+            /* ai colission */
+            if (((ballY + ballSize > aiY && ballY < aiY + paddleHeight)
+                && ballX + ballSize > aiX)
+                && !colissionHappening) {
+                ballSpeedX = -ballSpeedX;
+
+                let x = (ballOffset * Math.PI / 2) / (paddleHeight / 2);
+
+                ballSpeedY += 2 * Math.cos(x);
+
+                colissionHappening = true;
+                return;
+            }
+            colissionHappening = false;
+        }
+
+        function adjustXSpeed() {
+
+        }
+
+
+        function table() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, cw, ch);
+
+            ctx.fillStyle = 'gray';
+            for (let i = 20; i < ch; i += 30) {
+                ctx.fillRect(cw / 2 - lineWidth / 2, i, lineWidth, lineHeight);
+            }
+        }
+
+
+        topCanvas = canvas.offsetTop;
+        leftCanvas = canvas.offsetLeft;
+        canvas.addEventListener("mousemove", function (e) {
+            playerY = e.clientY - topCanvas - paddleHeight / 2;
+
+            if (playerY <= 0) {
+                playerY = 0;
+            }
+            if (playerY >= (ch - paddleHeight)) {
+                playerY = ch - paddleHeight;
+            }
+
+        });
+
+
+        function speedUp() {
+            ballSpeedX *= 1.05;
+            ballSpeedY *= 1.05;
+
+            const maxSpeed = 15;
+            if (ballSpeedX > maxSpeed) {
+                ballSpeedX = maxSpeed;
+            }
+
+            if (ballSpeedX < -maxSpeed) {
+                ballSpeedX = -maxSpeed;
+            }
+
+            if (ballSpeedY > maxSpeed) {
+                ballSpeedY = maxSpeed;
+            }
+
+            if (ballSpeedY < -maxSpeed) {
+                ballSpeedY = -maxSpeed;
+            }
+        }
+
+
+        function aiPosition() {
+
+            var middlePaddle = aiY + paddleHeight / 2;
+            var middleBall = ballY + ballSize / 2;
+
+            var offset = middlePaddle - middleBall;
+
+            if (ballX > 500) {
+                if (offset > 200) {
+                    aiY -= 15;
+                } else if (offset < -200) {
+                    aiY += 15;
+                }
+
+                if (offset > 100) {
+                    aiY -= 10;
+                } else if (offset < -100) {
+                    aiY += 10;
+                }
+            } else if (ballX <= 500 && ballX > 150) {
+
+                if (offset > 200) {
+                    aiY -= 1;
+                } else if (offset < -200) {
+                    aiY += 1;
+                }
+            }
+
+            aiY = ballY - paddleHeight / 2;
+        }
+
+        function game() {
+            table();
+            ball();
+            colission();
+            player();
+            ai();
+            aiPosition();
+        }
+
+        setInterval(game, 1000 / 60);
+
+
+    </script>
+</body>
+
+</html>
